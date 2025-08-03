@@ -1,0 +1,68 @@
+---
+- name: Deploy Frontend server
+  hosts: frontend
+  become: true
+
+  vars:
+    deploy_dir: /opt/app
+
+  tasks:
+    - name: Ensure deployment directory exists
+      ansible.builtin.file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Transfer Docker Compose configuration
+      ansible.builtin.copy:
+        src: compose.yml
+        dest: "{{ deploy_dir }}/compose.yml"
+        mode: '0644'
+
+    - name: Upload Nginx configuration
+      ansible.builtin.copy:
+        src: default.conf
+        dest: "{{ deploy_dir }}/default.conf"
+        mode: '0644'
+
+    - name: Stop and remove running containers
+      ansible.builtin.shell: docker-compose -f compose.yml down --remove-orphans
+      args:
+        chdir: "{{ deploy_dir }}"
+
+    - name: Remove old frontend docker image
+      ansible.builtin.shell: docker rmi mjmacaburas/mern-frontend:latest || true
+      args:
+        chdir: "{{ deploy_dir }}"
+
+    - name: Pull updated Docker images
+      ansible.builtin.shell: docker-compose -f compose.yml pull
+      args:
+        chdir: "{{ deploy_dir }}"
+
+    - name: Run containers in detached mode, force recreate
+      ansible.builtin.shell: docker-compose -f compose.yml up -d --remove-orphans --force-recreate
+      args:
+        chdir: "{{ deploy_dir }}"
+
+
+    - name: Verify frontend container is running latest image
+      ansible.builtin.shell: |
+        container_id=$(docker-compose -f compose.yml ps -q frontend)
+        echo "Container ID: $container_id"
+        image_id_container=$(docker inspect --format={{"{{"}}.Image{{"}}"}} $container_id)
+        echo "Image ID in container: $image_id_container"
+        image_id_latest=$(docker images --no-trunc -q mjmacaburas/mern-frontend:latest)
+        echo "Latest image ID: $image_id_latest"
+        if [ "$image_id_container" = "$image_id_latest" ]; then
+          echo "Frontend container is running the latest image."
+          exit 0
+        else
+          echo "Frontend container is NOT running the latest image."
+          exit 1
+        fi
+      args:
+        chdir: "{{ deploy_dir }}"
+      register: verify_result
+      failed_when: verify_result.rc != 0
+

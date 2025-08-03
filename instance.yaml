@@ -1,0 +1,28 @@
+- name: Install Docker and Docker Compose on all Instances
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install Docker on Amazon Linux
+      yum:
+        name: docker
+        state: present
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Docker Compose (latest version)
+      get_url:
+        url: https://github.com/docker/compose/releases/latest/download/docker-compose-{{ ansible_system | lower }}-{{ ansible_architecture }}
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Add current user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes

@@ -1,0 +1,50 @@
+---
+- name: Deploy backend server
+  hosts: backend
+  become: true
+
+  vars:
+    app_dir: /home/ec2-user/mern-gallery-sample-app/backend
+    app_owner: ec2-user
+
+  tasks:
+    - name: Ensure backend deployment directory exists
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_owner }}"
+        group: "{{ app_owner }}"
+        mode: '0755'
+
+    - name: Deploy Docker Compose for Backend
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/compose.yml"
+        content: |
+          services:
+            backend:
+              image: deniesemillanes/backend-app:latest
+              ports:
+                - 5000:5000
+              env_file:
+                - .env
+        owner: "{{ app_owner }}"
+        group: "{{ app_owner }}"
+        mode: '0644'
+
+    - name: Place environment file on target host
+      ansible.builtin.copy:
+        src: /home/ec2-user/mern-gallery-sample-app/backend/.env
+        dest: "{{ app_dir }}/.env"
+        owner: "{{ app_owner }}"
+        group: "{{ app_owner }}"
+        mode: '0600'
+
+    - name: Fetch latest backend image from Docker Hub
+      ansible.builtin.shell: docker-compose -f compose.yml pull
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Launch backend service in detached mode
+      ansible.builtin.shell: docker-compose -f compose.yml up -d
+      args:
+        chdir: "{{ app_dir }}"

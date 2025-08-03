@@ -1,0 +1,71 @@
+.App {
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+main {
+  padding: 20px;
+}
+
+footer {
+  position:absolute;
+  bottom: 0;
+  padding: 10px;
+  background-color: #f1f1f1;
+  color: #555;
+  width: 100%;
+}
+
+.img-grid, .img-grid:before, .img-grid:after{
+  clear:both;
+}
+.img-grid .grid-1, .img-grid .grid-2, .img-grid .grid-3, .img-grid .grid-4, .img-grid .grid-5, .img-grid .grid-6{
+  padding:15px;
+  float:left;
+  box-sizing:border-box;
+}
+
+.img-grid .grid-1 img, .img-grid .grid-2 img, .img-grid .grid-3 img, .img-grid .grid-4 img, .img-grid .grid-5 img, .img-grid .grid-6 img{
+  width:100%;
+  margin-bottom:30px;
+}
+
+.img-grid .grid-1{
+  width:100%;
+}
+.img-grid .grid-2{
+  width:50%;
+}
+
+.img-grid .grid-3{
+  width:33.33333333%;
+}
+
+.img-grid .grid-4{
+  width:25%;
+}
+
+.img-grid .grid-5{
+  width:20%;
+}
+
+.img-grid .grid-6{
+  width:16.666667%;
+}
+
+#upload {
+  opacity: 0;
+}
+
+#upload-label {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+}
